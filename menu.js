@@ -1,4 +1,3 @@
-// let extensionArray = [];
 let extensionList = document.getElementById('extensionList');
 
 chrome.management.getAll(function(allExtensions) {
@@ -9,23 +8,30 @@ chrome.management.getAll(function(allExtensions) {
       let button = document.createElement('button');
 
       extensionItem.id = `${extension.id}`;
-      button.addEventListener('click', (event) => {
-        console.log('EVENT', event);
-      });
-
       extensionItem.appendChild(title);
       extensionItem.appendChild(button);
-      // extensionArray.push(extension);
       extensionList.appendChild(extensionItem);
     }
   });
 });
 
-// function toggleActive(extensionId) {
-//   if () {
-//     // IF ACTIVE
-//     chrome.management.setEnabled(extensionId, false);
-//   } else {
-//     chrome.management.setEnabled(extensionId, true);
-//   }
-// };
+chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+  chrome.tabs.sendMessage(tabs[0].id, {greeting: 'hello'}, function(response) {
+    console.log('TAB RESPONSE: ', response)
+  })
+})
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    console.log('REQ: ', request)
+    console.log('SENDER: ', sender)
+});
+
+document.addEventListener('load', function() {
+  let allButtons = window.document.getElementsByTagName('button');
+  for (let i = 0; i < allButtons.length; i++) {
+    allButtons[i].addEventListener('click', function(event) {
+      console.log('EVNT: ', event)
+    })
+  }
+})
