@@ -1,0 +1,37 @@
+table {
+  table-layout: fixed;
+}
+
+tr, td {
+  padding: 10px 5px;
+}
+
+button {
+  width: 20px;
+  height: 20px;
+  border-radius: 60px;
+}
+
+.extension-active {
+  background-color: aquamarine;
+}
+
+.extension-inactive {
+  background-color: dimgrey;
+}
+
+.button-active {
+  background-color: darkturquoise;
+}
+
+.button-inactive {
+  background-color: crimson;
+}
+
+.title-active {
+  font-style: normal;
+}
+
+.title-inactive {
+  font-style: italic;
+}
