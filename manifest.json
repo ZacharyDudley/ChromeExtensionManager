@@ -11,7 +11,7 @@
 
   "author": "Zachary Dudley Friedman",
   "background": {
-    "scripts": ["menu.js"],
+    "scripts": ["background.js"],
     "persistent": false
   },
   "permissions": [
