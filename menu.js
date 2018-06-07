@@ -1,11 +1,18 @@
 let extensionTable = document.getElementById('extensionTable');
 
 chrome.management.getAll(function(allExtensions) {
+  let thisExtension = {};
+
   allExtensions.forEach(extension => {
     if (extension.type === 'extension') {
-      createExtensionRow(extension);
+      if (extension.id === 'indacognibelkfidjhkjchhmbicnmeif') {
+        thisExtension = extension;
+      } else {
+        createExtensionRow(extension);
+      }
     }
   });
+  createExtensionRow(thisExtension);
 });
 
 function createExtensionRow(extensionInfo) {
