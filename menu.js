@@ -2,6 +2,14 @@ let extensionTable = document.getElementById('extensionTable');
 
 chrome.management.getAll(function(allExtensions) {
   let thisExtension = {};
+  let allOption = {
+    id: 'all',
+    shortName: 'All Extensions'
+  }
+
+  if (allExtensions.length > 1) {
+    createExtensionRow(allOption);
+  }
 
   allExtensions.forEach(extension => {
     if (extension.type === 'extension') {
