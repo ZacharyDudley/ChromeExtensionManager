@@ -20,22 +20,20 @@ function createExtensionRow(extensionInfo) {
   let extensionCell = extensionRow.insertCell();
   let buttonBackground = document.createElement('label');
   buttonBackground.classList.add('switch');
+
   let checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
+
   let button = document.createElement('span');
   button.classList.add('slider');
-
-  button.addEventListener('mouseup', () => sendMessageToBackground(extensionInfo.id));
+  button.id = `${extensionInfo.id}`;
 
   buttonBackground.appendChild(checkbox);
   buttonBackground.appendChild(button);
   extensionCell.appendChild(buttonBackground);
 
-
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   extensionCell.appendChild(extensionTitle);
-
-  extensionRow.id = `${extensionInfo.id}`;
 
   if (extensionInfo.enabled) {
     checkbox.checked = true;
@@ -69,3 +67,9 @@ function sendMessageToBackground(extensionId) {
     })
   })
 }
+
+function eventHandler(evnt) {
+  sendMessageToBackground(evnt.target.id);
+}
+
+window.addEventListener('mouseup', eventHandler);
