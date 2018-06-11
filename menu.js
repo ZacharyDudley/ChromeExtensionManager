@@ -1,27 +1,41 @@
 let extensionTable = document.getElementById('extensionTable');
 
-chrome.management.getAll(function(allExtensions) {
-  let thisExtension = {};
-  let allOption = {
-    id: 'all',
-    shortName: 'All Extensions'
-  }
+let requestSelf = {
+  type: 'getOne',
+  id: 'indacognibelkfidjhkjchhmbicnmeif'
+};
 
-  if (allExtensions.length > 1) {
-    createExtensionRow(allOption);
-  }
+// function sendMessageToBackground(extensionId) {
+//   chrome.management.get(extensionId, function(extensionInfo) {
+//     chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
+//       styleExtension(response.id, response.isActive);
+//     })
+//   })
+// }
 
-  allExtensions.forEach(extension => {
-    if (extension.type === 'extension') {
-      if (extension.id === 'indacognibelkfidjhkjchhmbicnmeif') {
-        thisExtension = extension;
-      } else {
-        createExtensionRow(extension);
-      }
-    }
-  });
-  createExtensionRow(thisExtension);
-});
+
+// chrome.management.getAll(function(allExtensions) {
+//   let thisExtension = {};
+//   let allOption = {
+//     id: 'all',
+//     shortName: 'All Extensions'
+//   }
+
+//   if (allExtensions.length > 1) {
+//     createExtensionRow(allOption);
+//   }
+
+//   allExtensions.forEach(extension => {
+//     if (extension.type === 'extension') {
+//       if (extension.id === 'indacognibelkfidjhkjchhmbicnmeif') {
+//         thisExtension = extension;
+//       } else {
+//         createExtensionRow(extension);
+//       }
+//     }
+//   });
+//   createExtensionRow(thisExtension);
+// });
 
 function createExtensionRow(extensionInfo) {
   let extensionRow = extensionTable.insertRow();
@@ -68,16 +82,23 @@ function styleExtension(id, active) {
   }
 }
 
-function sendMessageToBackground(extensionId) {
-  chrome.management.get(extensionId, function(extensionInfo) {
-    chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
-      styleExtension(response.id, response.isActive);
-    })
-  })
-}
+function sendRequest(request) {
+  chrome.runtime.sendMessage(request, function(response) {
+    // chrome.runtime.sendMessage(response);
+
+    // response.foreach(el => {
+    //   createExtensionRow(el);
+    // });
+
+    createExtensionRow(response);
+    // styleExtension(response.id, response.isActive);
+  });
+};
 
 function eventHandler(evnt) {
   sendMessageToBackground(evnt.target.id);
-}
+};
 
 window.addEventListener('mouseup', eventHandler);
+
+sendRequest(requestSelf);
