@@ -40,6 +40,14 @@ function createExtensionRow(extensionInfo) {
   buttonBackground.appendChild(button);
   extensionCell.appendChild(buttonBackground);
 
+  if (extensionInfo.icons) {
+    let extensionIcon = document.createElement('img');
+    extensionIcon.src = extensionInfo.icons[0].url;
+    extensionIcon.height = 16;
+    extensionIcon.id = `${extensionInfo.id}-img`;
+    extensionCell.appendChild(extensionIcon);
+  }
+
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   extensionCell.appendChild(extensionTitle);
 
@@ -54,6 +62,7 @@ function createExtensionRow(extensionInfo) {
 
 function styleExtension(id, active) {
   let extension = document.getElementById(id);
+  // let icon = document.getElementById(`${id}-img`);
 
   if (active) {
     if (extension.classList.contains('extension-inactive')) {
@@ -65,6 +74,7 @@ function styleExtension(id, active) {
       extension.classList.remove('extension-active');
     }
     extension.classList.add('extension-inactive');
+    // icon.src = icon.src + '?grayscale=true'
   }
 }
 
