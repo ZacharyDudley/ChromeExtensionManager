@@ -1,53 +1,55 @@
 let allExtensions = [];
 let thisExtension = {};
 
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.management.getAll(function(extensions) {
+    extensions.forEach(element => {
+      if (element.type === 'extension') {
+        if (element.id === 'indacognibelkfidjhkjchhmbicnmeif') {
+          thisExtension = element;
+        } else {
+          allExtensions.push(element);
+        }
+      }
+    })
+
+    // chrome.runtime.sendMessage({type: 'init', data: allExtensions})
+  });
+});
+
+chrome.management.onInstalled.addListener(function(extensionInfo) {
+  if (extensionInfo.type === 'extension') {
+    allExtensions.push(extensionInfo);
+  }
+});
+
+chrome.management.onUninstalled.addListener(function(extensionId) {
+  for (let i = 0; i < allExtensions.length; i++) {
+    if (allExtensions[i].id === extensionId) {
+      allExtensions.splice(i, 1);
+    }
+  }
+});
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log('SENT REQ: ', request)
   switch (request.type) {
     case 'getAll':
-      chrome.management.getAll(function(extensions) {
-        extensions.forEach(element => {
-          if (element.type === 'extension') {
-            if (element.id === 'indacognibelkfidjhkjchhmbicnmeif') {
-              thisExtension = element;
-            } else {
-              allExtensions.push(element);
-            }
-          }
-        });
-        console.log(allExtensions);
-        sendResponse(allExtensions);
-      });
+      sendResponse({type: 'allExtensions', data: allExtensions});
       return;
 
-    case 'getOne':
+    case 'toggle':
       chrome.management.get(request.id, function(extensionInfo) {
-        console.log('RES: ', extensionInfo);
-        sendResponse(extensionInfo);
+        chrome.management.setEnabled(extensionInfo.id, !extensionInfo.enabled);
+
+        for (let i = 0; i < allExtensions.length; i++) {
+          if (allExtensions[i].id === extensionInfo.id) {
+            allExtensions[i].enabled = !extensionInfo.enabled;
+          }
+        }
       });
       return;
-
-    case 'getThis':
-
-      return;
-
-    case 'onAll':
-      break;
-
-    case 'offAll':
-      break;
-
-    case 'onOne':
-      chrome.management.setEnabled(request.id, true);
-      break;
-
-    case 'offOne':
-      chrome.management.setEnabled(request.id, false);
-      break;
 
     default:
       console.log('REQUEST: ', request);
-      break;
   }
-  //   sendResponse({id: request.id, isActive: !request.enabled});
 });

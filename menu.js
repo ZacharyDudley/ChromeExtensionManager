@@ -1,9 +1,18 @@
+let allExtensions = [];
 let extensionTable = document.getElementById('extensionTable');
 
-let requestSelf = {
-  type: 'getOne',
-  id: 'indacognibelkfidjhkjchhmbicnmeif'
-};
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.type === 'init') {
+    allExtensions = request.data;
+  }
+  // sendResponse(allExtensions)
+});
+
+
+// let requestSelf = {
+//   type: 'getOne',
+//   id: 'indacognibelkfidjhkjchhmbicnmeif'
+// };
 
 // function sendMessageToBackground(extensionId) {
 //   chrome.management.get(extensionId, function(extensionInfo) {
@@ -84,21 +93,43 @@ function styleExtension(id, active) {
 
 function sendRequest(request) {
   chrome.runtime.sendMessage(request, function(response) {
-    // chrome.runtime.sendMessage(response);
-
-    // response.foreach(el => {
-    //   createExtensionRow(el);
-    // });
-
-    createExtensionRow(response);
-    // styleExtension(response.id, response.isActive);
+    if (response.type === 'allExtensions') {
+      for (let i = 0; i < response.data.length; i++) {
+        createExtensionRow(response.data[i]);
+      }
+    }
   });
 };
 
 function eventHandler(evnt) {
-  sendMessageToBackground(evnt.target.id);
+  sendRequest({type: 'toggle', id: evnt.target.id});
 };
 
 window.addEventListener('mouseup', eventHandler);
 
-sendRequest(requestSelf);
+
+chrome.management.onEnabled.addListener(function(extensionInfo) {
+  for (let i = 0; i < allExtensions.length; i++) {
+    if (allExtensions[i].id === extensionInfo.id) {
+      allExtensions[i].enabled = true;
+    }
+  }
+
+  styleExtension(extensionInfo.id, true);
+});
+
+chrome.management.onDisabled.addListener(function(extensionInfo) {
+  for (let i = 0; i < allExtensions.length; i++) {
+    if (allExtensions[i].id === extensionInfo.id) {
+      allExtensions[i].enabled = false;
+    }
+  }
+
+  styleExtension(extensionInfo.id, false);
+});
+
+// for (let i = 0; i < allExtensions.length; i++) {
+//   createExtensionRow(allExtensions[i]);
+// }
+
+sendRequest({type: 'getAll'});
