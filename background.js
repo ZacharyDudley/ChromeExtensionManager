@@ -1,5 +1,4 @@
-let everyExtension = [];
-let thisExtension;
+let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   switch (request.type) {
@@ -12,7 +11,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     case 'allOn':
       chrome.management.getAll(function(allExtensions) {
         allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && extension.enabled && extension.id !== 'indacognibelkfidjhkjchhmbicnmeif') {
+          if (extension.type === 'extension' && extension.enabled && extension.id !== thisExtensionId) {
             chrome.management.setEnabled(extension.id, true);
           }
         });
@@ -22,7 +21,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     case 'allOff':
       chrome.management.getAll(function(allExtensions) {
         allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && !extension.enabled && extension.id !== 'indacognibelkfidjhkjchhmbicnmeif') {
+          if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
             chrome.management.setEnabled(extension.id, false);
           }
         });

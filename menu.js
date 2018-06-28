@@ -48,10 +48,10 @@ function createExtensionRow(extensionInfo) {
 
   if (extensionInfo.enabled) {
     checkbox.checked = true;
-    extensionRow.classList.add('extension-active');
+    extensionRow.dataset.enabled = true;
   } else {
     checkbox.checked = false;
-    extensionRow.classList.add('extension-inactive');
+    extensionRow.dataset.enabled = false;
   }
 }
 
@@ -59,15 +59,9 @@ function styleExtension(id, active) {
   let extension = document.getElementById(id);
 
   if (active) {
-    if (extension.classList.contains('extension-inactive')) {
-      extension.classList.remove('extension-inactive');
-    }
-    extension.classList.add('extension-active');
+    extension.dataset.enabled = true;
   } else {
-    if (extension.classList.contains('extension-active')) {
-      extension.classList.remove('extension-active');
-    }
-    extension.classList.add('extension-inactive');
+    extension.dataset.enabled = false;
   }
 }
 
@@ -112,20 +106,25 @@ function logMessage(message) {
   chrome.runtime.sendMessage({type: 'message', message});
 }
 
-function sendMessageToBackground(extensionId) {
-  chrome.management.get(extensionId, function(extensionInfo) {
-    chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
-      styleExtension(response.id, response.isActive);
-    })
-  })
-}
+// function sendMessageToBackground(extensionId) {
+//   chrome.management.get(extensionId, function(extensionInfo) {
+//     chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
+//       styleExtension(response.id, response.isActive);
+//     })
+//   })
+// }
 
 function eventHandler(evnt) {
-  if (evnt.target.id === 'all') {
-
-  } else {
-
-  }
+  // let targetElement = document.getElementById(evnt.target.id);
+  // if (evnt.target.id === 'all') {
+  //   if ()
+  // } else {
+  //   if (targetElement.dataset.enabled) {
+  //     oneOff(evnt.target.id);
+  //   } else {
+  //     oneOn(evnt.target.id);
+  //   }
+  // }
   // sendMessageToBackground(evnt.target.id);
 }
 
