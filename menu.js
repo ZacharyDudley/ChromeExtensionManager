@@ -1,27 +1,30 @@
 let extensionTable = document.getElementById('extensionTable');
 
-chrome.management.getAll(function(allExtensions) {
-  let thisExtension = {};
-  let allOption = {
-    id: 'all',
-    shortName: 'All Extensions'
-  }
+function getAllExtensions() {
+  chrome.runtime.sendMessage({type: 'allGet'}, function(allExtensions) {
+    let allOption = {
+      id: 'all',
+      shortName: 'All Extensions'
+    }
 
-  if (allExtensions.length > 1) {
-    createExtensionRow(allOption);
-  }
+    let thisExtension;
 
-  allExtensions.forEach(extension => {
-    if (extension.type === 'extension') {
-      if (extension.id === 'indacognibelkfidjhkjchhmbicnmeif') {
-        thisExtension = extension;
-      } else {
-        createExtensionRow(extension);
+    if (allExtensions.all.length > 1) {
+      createExtensionRow(allOption);
+    }
+
+    for (let i = 0; i < allExtensions.all.length; i++) {
+      if (allExtensions.all[i].type === 'extension') {
+        if (allExtensions.all[i].id === 'indacognibelkfidjhkjchhmbicnmeif') {
+          thisExtension = allExtensions.all[i];
+        } else {
+          createExtensionRow(allExtensions.all[i]);
+        }
       }
     }
+    createExtensionRow(thisExtension);
   });
-  createExtensionRow(thisExtension);
-});
+}
 
 function createExtensionRow(extensionInfo) {
   let extensionRow = extensionTable.insertRow();
@@ -68,6 +71,47 @@ function styleExtension(id, active) {
   }
 }
 
+function allOn() {
+  chrome.runtime.sendMessage({type: 'allOn'}, function(extensionArray) {
+    extensionArray.forEach(extension => {
+      styleExtension(extension.id, true);
+    });
+  });
+}
+
+function allOff() {
+  chrome.runtime.sendMessage({type: 'allOff'}, function(extensionArray) {
+    extensionArray.forEach(extension => {
+      styleExtension(extension.id, false);
+    });
+  });
+}
+
+function oneOn(extensionId) {
+  chrome.runtime.sendMessage({type: 'oneOn', id: extensionId}
+  // , function(extensionArray) {
+  //   extensionArray.forEach(extension => {
+  //     styleExtension(extension.id, true);
+  //   }
+  // );
+  // }
+  );
+}
+
+function oneOff(extensionId) {
+  chrome.runtime.sendMessage({type: 'oneOff', extensionId}
+  // , function(extensionArray) {
+  //   extensionArray.forEach(extension => {
+  //     styleExtension(extension.id, false);
+  //   });
+  // }
+  );
+}
+
+function logMessage(message) {
+  chrome.runtime.sendMessage({type: 'message', message});
+}
+
 function sendMessageToBackground(extensionId) {
   chrome.management.get(extensionId, function(extensionInfo) {
     chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
@@ -77,7 +121,14 @@ function sendMessageToBackground(extensionId) {
 }
 
 function eventHandler(evnt) {
-  sendMessageToBackground(evnt.target.id);
+  if (evnt.target.id === 'all') {
+
+  } else {
+
+  }
+  // sendMessageToBackground(evnt.target.id);
 }
 
 window.addEventListener('mouseup', eventHandler);
+
+getAllExtensions();
