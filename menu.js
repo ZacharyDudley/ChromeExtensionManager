@@ -1,3 +1,4 @@
+let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 let extensionTable = document.getElementById('extensionTable');
 
 function getAllExtensions() {
@@ -22,11 +23,11 @@ function getAllExtensions() {
         }
       }
     }
-    createExtensionRow(thisExtension);
+    createExtensionRow(thisExtension, true);
   });
 }
 
-function createExtensionRow(extensionInfo) {
+function createExtensionRow(extensionInfo, isThisExtension = false) {
   let extensionRow = extensionTable.insertRow();
   let extensionCell = extensionRow.insertCell();
   let buttonBackground = document.createElement('label');
@@ -37,7 +38,6 @@ function createExtensionRow(extensionInfo) {
 
   let button = document.createElement('span');
   button.classList.add('slider');
-  button.id = `${extensionInfo.id}`;
 
   buttonBackground.appendChild(checkbox);
   buttonBackground.appendChild(button);
@@ -46,60 +46,85 @@ function createExtensionRow(extensionInfo) {
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   extensionCell.appendChild(extensionTitle);
 
+  button.id = `${extensionInfo.id}`;
+  extensionRow.id = `${extensionInfo}-row`;
+
+  if (isThisExtension) {
+    extensionRow.classList.add('this');
+  }
+
   if (extensionInfo.enabled) {
     checkbox.checked = true;
-    extensionRow.dataset.enabled = true;
+    // extensionRow.dataset.enabled = true;
+    extensionRow.classList.add('active');
+    button.classList.add('active');
   } else {
     checkbox.checked = false;
-    extensionRow.dataset.enabled = false;
+    // extensionRow.dataset.enabled = false;
+    extensionRow.classList.add('inactive');
+    button.classList.add('inactive');
   }
 }
 
 function styleExtension(id, active) {
   let extension = document.getElementById(id);
+  let row = document.getElementById(`{id}-row`);
+
+  // if (active) {
+  //   row.dataset.enabled = true;
+  // } else {
+  //   row.dataset.enabled = false;
+  // }
 
   if (active) {
-    extension.dataset.enabled = true;
+    if (extension.classList.contains('inactive')) {
+      extension.classList.remove('inactive');
+      row.classList.remove('inactive');
+    }
+    extension.classList.add('active');
+    row.classList.add('active');
   } else {
-    extension.dataset.enabled = false;
+    if (extension.classList.contains('active')) {
+      extension.classList.remove('active');
+      row.classList.remove('active');
+    }
+    extension.classList.add('inactive');
+    row.classList.add('inactive');
   }
 }
 
 function allOn() {
-  chrome.runtime.sendMessage({type: 'allOn'}, function(extensionArray) {
-    extensionArray.forEach(extension => {
-      styleExtension(extension.id, true);
-    });
+  chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
+    for (let i = 0; i < allExtensions.all.length; i++) {
+      if (allExtensions.all[i].type === 'extension' && !allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
+        styleExtension(allExtensions.all[i], true);
+      }
+    }
+    styleExtension('all', true);
   });
 }
 
 function allOff() {
-  chrome.runtime.sendMessage({type: 'allOff'}, function(extensionArray) {
-    extensionArray.forEach(extension => {
-      styleExtension(extension.id, false);
-    });
+  chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
+    for (let i = 0; i < allExtensions.all.length; i++) {
+      if (allExtensions.all[i].type === 'extension' && allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
+        styleExtension(allExtensions.all[i], false);
+      }
+    }
+    styleExtension('all', false);
   });
 }
 
 function oneOn(extensionId) {
-  chrome.runtime.sendMessage({type: 'oneOn', id: extensionId}
-  // , function(extensionArray) {
-  //   extensionArray.forEach(extension => {
-  //     styleExtension(extension.id, true);
-  //   }
-  // );
-  // }
-  );
+  chrome.runtime.sendMessage({type: 'oneOn', id: extensionId}, function(extension) {
+    styleExtension(extension.id, true);
+  });
 }
 
 function oneOff(extensionId) {
-  chrome.runtime.sendMessage({type: 'oneOff', extensionId}
-  // , function(extensionArray) {
-  //   extensionArray.forEach(extension => {
-  //     styleExtension(extension.id, false);
-  //   });
-  // }
-  );
+  chrome.runtime.sendMessage({type: 'oneOff', id: extensionId}, function(extension) {
+    styleExtension(extension.id, false);
+  });
 }
 
 function logMessage(message) {
@@ -115,17 +140,28 @@ function logMessage(message) {
 // }
 
 function eventHandler(evnt) {
-  // let targetElement = document.getElementById(evnt.target.id);
-  // if (evnt.target.id === 'all') {
-  //   if ()
-  // } else {
-  //   if (targetElement.dataset.enabled) {
-  //     oneOff(evnt.target.id);
-  //   } else {
-  //     oneOn(evnt.target.id);
-  //   }
-  // }
-  // sendMessageToBackground(evnt.target.id);
+  let targetElement = document.getElementById(evnt.target.id);
+
+  if (evnt.target.id === 'all') {
+    if (targetElement.classList.contains('active')) {
+      allOff(evnt.target.id);
+    } else {
+      allOn(evnt.target.id);
+    }
+  } else if (targetElement.classList.contains('active')) {
+    oneOff(evnt.target.id);
+  } else {
+    oneOn(evnt.target.id);
+  }
+  // else {
+    // if (targetElement.dataset.enabled) {
+    //   oneOff(evnt.target.id);
+    // } else {
+    //   oneOn(evnt.target.id);
+    // }
+    // }
+    // sendMessageToBackground(evnt.target.id);
+
 }
 
 window.addEventListener('mouseup', eventHandler);

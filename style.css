@@ -18,11 +18,30 @@ tr, td {
   font-size: 13px;
 }
 
-tr[data-enabled = true] {
+/* tr[data-enabled = true] {
   font-style: normal;
 }
 
 tr[data-enabled = false] {
+  font-style: italic;
+}
+ */
+
+.this {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top-style: double;
+  border-top-color: black;
+  border-top-width: 5px;
+}
+
+.active {
+  /* background-color: white; */
+  font-style: normal;
+}
+
+.inactive {
+  /* background-color: dimgrey; */
   font-style: italic;
 }
 
