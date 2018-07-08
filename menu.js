@@ -47,7 +47,7 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
   extensionCell.appendChild(extensionTitle);
 
   button.id = `${extensionInfo.id}`;
-  extensionRow.id = `${extensionInfo}-row`;
+  // extensionRow.id = `${extensionInfo}-row`;
 
   if (isThisExtension) {
     extensionRow.classList.add('this');
@@ -56,19 +56,19 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
   if (extensionInfo.enabled) {
     checkbox.checked = true;
     // extensionRow.dataset.enabled = true;
-    extensionRow.classList.add('active');
+    // extensionRow.classList.add('active');
     button.classList.add('active');
   } else {
     checkbox.checked = false;
     // extensionRow.dataset.enabled = false;
-    extensionRow.classList.add('inactive');
+    // extensionRow.classList.add('inactive');
     button.classList.add('inactive');
   }
 }
 
 function styleExtension(id, active) {
   let extension = document.getElementById(id);
-  let row = document.getElementById(`{id}-row`);
+  // let row = document.getElementById(`{id}-row`);
 
   // if (active) {
   //   row.dataset.enabled = true;
@@ -79,39 +79,39 @@ function styleExtension(id, active) {
   if (active) {
     if (extension.classList.contains('inactive')) {
       extension.classList.remove('inactive');
-      row.classList.remove('inactive');
+      // row.classList.remove('inactive');
     }
     extension.classList.add('active');
-    row.classList.add('active');
+    // row.classList.add('active');
   } else {
     if (extension.classList.contains('active')) {
       extension.classList.remove('active');
-      row.classList.remove('active');
+      // row.classList.remove('active');
     }
     extension.classList.add('inactive');
-    row.classList.add('inactive');
+    // row.classList.add('inactive');
   }
 }
 
 function allOn() {
   chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
+    styleExtension('all', true);
     for (let i = 0; i < allExtensions.all.length; i++) {
       if (allExtensions.all[i].type === 'extension' && !allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
         styleExtension(allExtensions.all[i], true);
       }
     }
-    styleExtension('all', true);
   });
 }
 
 function allOff() {
   chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
+    styleExtension('all', false);
     for (let i = 0; i < allExtensions.all.length; i++) {
       if (allExtensions.all[i].type === 'extension' && allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
         styleExtension(allExtensions.all[i], false);
       }
     }
-    styleExtension('all', false);
   });
 }
 
@@ -141,6 +141,7 @@ function logMessage(message) {
 
 function eventHandler(evnt) {
   let targetElement = document.getElementById(evnt.target.id);
+  logMessage({class: targetElement.classList, el: targetElement, tar: evnt.target, id: evnt.target.id})
 
   if (evnt.target.id === 'all') {
     if (targetElement.classList.contains('active')) {

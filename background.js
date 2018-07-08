@@ -1,7 +1,7 @@
 let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log('REQUEST: ', request);
+  // console.log('REQUEST: ', request);
 
   switch (request.type) {
     case 'allGet':
