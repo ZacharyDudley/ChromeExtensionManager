@@ -1,7 +1,9 @@
 let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
+let extensionList = [];
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   // console.log('REQUEST: ', request);
+  extensionList = [];
 
   switch (request.type) {
     case 'allGet':
@@ -16,9 +18,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         allExtensions.forEach(extension => {
           if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
             chrome.management.setEnabled(extension.id, true);
+            extensionList.push(extension.id);
           }
         });
-        sendResponse({all: allExtensions});
+        sendResponse({all: extensionList});
       });
       break;
 
@@ -28,9 +31,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         allExtensions.forEach(extension => {
           if (extension.type === 'extension' && extension.enabled && extension.id !== thisExtensionId) {
             chrome.management.setEnabled(extension.id, false);
+            extensionList.push(extension.id);
           }
         });
-        sendResponse({all: allExtensions});
+        sendResponse({all: extensionList});
       });
       break;
 

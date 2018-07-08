@@ -94,23 +94,19 @@ function styleExtension(id, active) {
 }
 
 function allOn() {
+  styleExtension('all', true);
   chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
-    styleExtension('all', true);
     for (let i = 0; i < allExtensions.all.length; i++) {
-      if (allExtensions.all[i].type === 'extension' && !allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
-        styleExtension(allExtensions.all[i], true);
-      }
+      styleExtension(allExtensions.all[i], true);
     }
   });
 }
 
 function allOff() {
+  styleExtension('all', false);
   chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
-    styleExtension('all', false);
     for (let i = 0; i < allExtensions.all.length; i++) {
-      if (allExtensions.all[i].type === 'extension' && allExtensions.all[i].enabled && allExtensions.all[i].id !== thisExtensionId) {
-        styleExtension(allExtensions.all[i], false);
-      }
+      styleExtension(allExtensions.all[i], false);
     }
   });
 }
@@ -130,14 +126,6 @@ function oneOff(extensionId) {
 function logMessage(message) {
   chrome.runtime.sendMessage({type: 'message', message});
 }
-
-// function sendMessageToBackground(extensionId) {
-//   chrome.management.get(extensionId, function(extensionInfo) {
-//     chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
-//       styleExtension(response.id, response.isActive);
-//     })
-//   })
-// }
 
 function eventHandler(evnt) {
   let targetElement = document.getElementById(evnt.target.id);
