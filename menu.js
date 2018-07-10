@@ -3,27 +3,15 @@ let extensionTable = document.getElementById('extensionTable');
 
 function getAllExtensions() {
   chrome.runtime.sendMessage({type: 'allGet'}, function(allExtensions) {
-    let allOption = {
-      id: 'all',
-      shortName: 'All Extensions'
-    }
-
-    let thisExtension;
-
     if (allExtensions.all.length > 1) {
-      createExtensionRow(allOption);
+      createExtensionRow(allExtensions.allOption);
     }
 
     for (let i = 0; i < allExtensions.all.length; i++) {
-      if (allExtensions.all[i].type === 'extension') {
-        if (allExtensions.all[i].id === 'indacognibelkfidjhkjchhmbicnmeif') {
-          thisExtension = allExtensions.all[i];
-        } else {
-          createExtensionRow(allExtensions.all[i]);
-        }
-      }
+        createExtensionRow(allExtensions.all[i]);
     }
-    createExtensionRow(thisExtension, true);
+
+    createExtensionRow(allExtensions.thisExtension, true);
   });
 }
 
@@ -35,6 +23,7 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
 
   let checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
+  // checkbox.checked = extensionInfo.enabled;
 
   let button = document.createElement('span');
   button.classList.add('slider');
@@ -47,54 +36,40 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
   extensionCell.appendChild(extensionTitle);
 
   button.id = `${extensionInfo.id}`;
-  // extensionRow.id = `${extensionInfo}-row`;
 
   if (isThisExtension) {
     extensionRow.classList.add('this');
   }
 
-  if (extensionInfo.enabled) {
-    checkbox.checked = true;
-    // extensionRow.dataset.enabled = true;
-    // extensionRow.classList.add('active');
-    button.classList.add('active');
-  } else {
-    checkbox.checked = false;
-    // extensionRow.dataset.enabled = false;
-    // extensionRow.classList.add('inactive');
-    button.classList.add('inactive');
-  }
+  styleExtension(extensionInfo.id, extensionInfo.enabled);
 }
 
 function styleExtension(id, active) {
-  let extension = document.getElementById(id);
-  // let row = document.getElementById(`{id}-row`);
-
-  // if (active) {
-  //   row.dataset.enabled = true;
-  // } else {
-  //   row.dataset.enabled = false;
-  // }
+  let button = document.getElementById(id);
+  let row = button.parentElement.parentElement.parentElement;
+  let checkbox = button.previousSibling;
 
   if (active) {
-    if (extension.classList.contains('inactive')) {
-      extension.classList.remove('inactive');
-      // row.classList.remove('inactive');
+    if (button.classList.contains('inactive')) {
+      button.classList.remove('inactive');
+      row.classList.remove('inactiveRow');
     }
-    extension.classList.add('active');
-    // row.classList.add('active');
+    button.classList.add('active');
+    row.classList.add('activeRow');
   } else {
-    if (extension.classList.contains('active')) {
-      extension.classList.remove('active');
-      // row.classList.remove('active');
+    if (button.classList.contains('active')) {
+      button.classList.remove('active');
+      row.classList.remove('activeRow');
     }
-    extension.classList.add('inactive');
-    // row.classList.add('inactive');
+    button.classList.add('inactive');
+    row.classList.add('inactiveRow');
   }
+
+  checkbox.checked = active;
 }
 
 function allOn() {
-  styleExtension('all', true);
+  // styleExtension('all', true);
   chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], true);
@@ -103,7 +78,7 @@ function allOn() {
 }
 
 function allOff() {
-  styleExtension('all', false);
+  // styleExtension('all', false);
   chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], false);
@@ -128,29 +103,19 @@ function logMessage(message) {
 }
 
 function eventHandler(evnt) {
-  let targetElement = document.getElementById(evnt.target.id);
-  logMessage({class: targetElement.classList, el: targetElement, tar: evnt.target, id: evnt.target.id})
+  let checkbox = document.getElementById(evnt.target.id).previousSibling;
 
   if (evnt.target.id === 'all') {
-    if (targetElement.classList.contains('active')) {
+    if (checkbox.checked) {
       allOff(evnt.target.id);
     } else {
       allOn(evnt.target.id);
     }
-  } else if (targetElement.classList.contains('active')) {
+  } else if (checkbox.checked) {
     oneOff(evnt.target.id);
   } else {
     oneOn(evnt.target.id);
   }
-  // else {
-    // if (targetElement.dataset.enabled) {
-    //   oneOff(evnt.target.id);
-    // } else {
-    //   oneOn(evnt.target.id);
-    // }
-    // }
-    // sendMessageToBackground(evnt.target.id);
-
 }
 
 window.addEventListener('mouseup', eventHandler);
