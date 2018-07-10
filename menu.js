@@ -1,29 +1,21 @@
+let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 let extensionTable = document.getElementById('extensionTable');
 
-chrome.management.getAll(function(allExtensions) {
-  let thisExtension = {};
-  let allOption = {
-    id: 'all',
-    shortName: 'All Extensions'
-  }
-
-  if (allExtensions.length > 1) {
-    createExtensionRow(allOption);
-  }
-
-  allExtensions.forEach(extension => {
-    if (extension.type === 'extension') {
-      if (extension.id === 'indacognibelkfidjhkjchhmbicnmeif') {
-        thisExtension = extension;
-      } else {
-        createExtensionRow(extension);
-      }
+function getAllExtensions() {
+  chrome.runtime.sendMessage({type: 'allGet'}, function(allExtensions) {
+    if (allExtensions.all.length > 1) {
+      createExtensionRow(allExtensions.allOption);
     }
-  });
-  createExtensionRow(thisExtension);
-});
 
-function createExtensionRow(extensionInfo) {
+    for (let i = 0; i < allExtensions.all.length; i++) {
+        createExtensionRow(allExtensions.all[i]);
+    }
+
+    createExtensionRow(allExtensions.thisExtension, true);
+  });
+}
+
+function createExtensionRow(extensionInfo, isThisExtension = false) {
   let extensionRow = extensionTable.insertRow();
   let extensionCell = extensionRow.insertCell();
   let buttonBackground = document.createElement('label');
@@ -31,10 +23,10 @@ function createExtensionRow(extensionInfo) {
 
   let checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
+  // checkbox.checked = extensionInfo.enabled;
 
   let button = document.createElement('span');
   button.classList.add('slider');
-  button.id = `${extensionInfo.id}`;
 
   buttonBackground.appendChild(checkbox);
   buttonBackground.appendChild(button);
@@ -43,41 +35,89 @@ function createExtensionRow(extensionInfo) {
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   extensionCell.appendChild(extensionTitle);
 
-  if (extensionInfo.enabled) {
-    checkbox.checked = true;
-    extensionRow.classList.add('extension-active');
-  } else {
-    checkbox.checked = false;
-    extensionRow.classList.add('extension-inactive');
+  button.id = `${extensionInfo.id}`;
+
+  if (isThisExtension) {
+    extensionRow.classList.add('this');
   }
+
+  styleExtension(extensionInfo.id, extensionInfo.enabled);
 }
 
 function styleExtension(id, active) {
-  let extension = document.getElementById(id);
+  let button = document.getElementById(id);
+  let row = button.parentElement.parentElement.parentElement;
+  let checkbox = button.previousSibling;
 
   if (active) {
-    if (extension.classList.contains('extension-inactive')) {
-      extension.classList.remove('extension-inactive');
+    if (button.classList.contains('inactive')) {
+      button.classList.remove('inactive');
+      row.classList.remove('inactiveRow');
     }
-    extension.classList.add('extension-active');
+    button.classList.add('active');
+    row.classList.add('activeRow');
   } else {
-    if (extension.classList.contains('extension-active')) {
-      extension.classList.remove('extension-active');
+    if (button.classList.contains('active')) {
+      button.classList.remove('active');
+      row.classList.remove('activeRow');
     }
-    extension.classList.add('extension-inactive');
+    button.classList.add('inactive');
+    row.classList.add('inactiveRow');
   }
+
+  checkbox.checked = active;
 }
 
-function sendMessageToBackground(extensionId) {
-  chrome.management.get(extensionId, function(extensionInfo) {
-    chrome.runtime.sendMessage({id: extensionId, enabled: extensionInfo.enabled}, function(response) {
-      styleExtension(response.id, response.isActive);
-    })
-  })
+function allOn() {
+  // styleExtension('all', true);
+  chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
+    for (let i = 0; i < allExtensions.all.length; i++) {
+      styleExtension(allExtensions.all[i], true);
+    }
+  });
+}
+
+function allOff() {
+  // styleExtension('all', false);
+  chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
+    for (let i = 0; i < allExtensions.all.length; i++) {
+      styleExtension(allExtensions.all[i], false);
+    }
+  });
+}
+
+function oneOn(extensionId) {
+  chrome.runtime.sendMessage({type: 'oneOn', id: extensionId}, function(extension) {
+    styleExtension(extension.id, true);
+  });
+}
+
+function oneOff(extensionId) {
+  chrome.runtime.sendMessage({type: 'oneOff', id: extensionId}, function(extension) {
+    styleExtension(extension.id, false);
+  });
+}
+
+function logMessage(message) {
+  chrome.runtime.sendMessage({type: 'message', message});
 }
 
 function eventHandler(evnt) {
-  sendMessageToBackground(evnt.target.id);
+  let checkbox = document.getElementById(evnt.target.id).previousSibling;
+
+  if (evnt.target.id === 'all') {
+    if (checkbox.checked) {
+      allOff(evnt.target.id);
+    } else {
+      allOn(evnt.target.id);
+    }
+  } else if (checkbox.checked) {
+    oneOff(evnt.target.id);
+  } else {
+    oneOn(evnt.target.id);
+  }
 }
 
 window.addEventListener('mouseup', eventHandler);
+
+getAllExtensions();

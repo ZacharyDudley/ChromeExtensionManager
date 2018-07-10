@@ -18,6 +18,24 @@ tr, td {
   font-size: 13px;
 }
 
+.this {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top-style: double;
+  border-top-color: black;
+  border-top-width: 5px;
+}
+
+.activeRow {
+  /* background-color: teal; */
+  font-style: normal;
+}
+
+.inactiveRow {
+  /* background-color: dimgrey; */
+  font-style: italic;
+}
+
 .switch {
   flex-shrink: 0;
   position: relative;
@@ -70,15 +88,4 @@ input:focus + .slider {
 input:checked + .slider:before {
   /* transform: translateX(26px); */
   transform: translateX(22px);
-}
-
-
-.extension-active {
-  background-color: white;
-  font-style: normal;
-}
-
-.extension-inactive {
-  /* background-color: dimgrey; */
-  font-style: italic;
 }
