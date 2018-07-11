@@ -32,6 +32,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             }
           }
         });
+        extensionList.sort(function (a, b) {
+          let nameA = a.shortName.toLowerCase();
+          let nameB = b.shortName.toLowerCase();
+          if (nameA < nameB) {
+            return -1;
+          } else if (nameA > nameB) {
+            return 1;
+          } else {
+            return 0;
+          }
+        });
         if (allExtensionsOff) {
           allOption.enabled = false;
         } else if (allExtensionsOn) {
