@@ -23,7 +23,6 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
 
   let checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
-  // checkbox.checked = extensionInfo.enabled;
 
   let button = document.createElement('span');
   button.classList.add('slider');
@@ -34,6 +33,13 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
 
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   extensionCell.appendChild(extensionTitle);
+
+  // LOCK BOX
+  let lockBox = document.createElement('input');
+  lockBox.type = 'checkbox';
+  lockBox.id = `lock-${extensionInfo.id}`;
+  lockBox.classList.add('lockbox');
+  extensionCell.appendChild(lockBox);
 
   button.id = `${extensionInfo.id}`;
 
@@ -69,7 +75,6 @@ function styleExtension(id, active) {
 }
 
 function allOn() {
-  // styleExtension('all', true);
   chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], true);
@@ -78,7 +83,6 @@ function allOn() {
 }
 
 function allOff() {
-  // styleExtension('all', false);
   chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], false);
@@ -104,6 +108,7 @@ function logMessage(message) {
 
 function eventHandler(evnt) {
   let checkbox = document.getElementById(evnt.target.id).previousSibling;
+  let lockbox = document.getElementById(evnt.target.id).parentElement.nextSibling.nextSibling;
 
   if (evnt.target.id === 'all') {
     if (checkbox.checked) {
@@ -111,10 +116,14 @@ function eventHandler(evnt) {
     } else {
       allOn(evnt.target.id);
     }
-  } else if (checkbox.checked) {
+  } else if (!lockbox.checked && checkbox.checked) {
     oneOff(evnt.target.id);
-  } else {
+  } else if (lockbox.checked && checkbox.checked) {
+    checkbox.disabled = true;
+  } else if (!lockbox.checked && !checkbox.checked) {
     oneOn(evnt.target.id);
+  } else if (lockbox.checked && !checkbox.checked) {
+    checkbox.disabled = true;
   }
 }
 
