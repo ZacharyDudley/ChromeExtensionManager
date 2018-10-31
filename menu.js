@@ -8,7 +8,7 @@ function getAllExtensions() {
     }
 
     for (let i = 0; i < allExtensions.all.length; i++) {
-        createExtensionRow(allExtensions.all[i]);
+      createExtensionRow(allExtensions.all[i]);
     }
 
     createExtensionRow(allExtensions.thisExtension, true);
@@ -32,7 +32,9 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
   extensionCell.appendChild(buttonBackground);
 
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
-  extensionCell.appendChild(extensionTitle);
+  let title = document.createElement('p');
+  title.appendChild(extensionTitle);
+  extensionCell.appendChild(title);
 
   // LOCK BOX
   let lockBox = document.createElement('input');
@@ -107,23 +109,23 @@ function logMessage(message) {
 }
 
 function eventHandler(evnt) {
-  let checkbox = document.getElementById(evnt.target.id).previousSibling;
-  let lockbox = document.getElementById(evnt.target.id).parentElement.nextSibling.nextSibling;
+  if (evnt.target.id) {
+    let checkbox = document.getElementById(evnt.target.id).previousSibling;
+    let lockbox = document.getElementById(evnt.target.id).parentElement.nextSibling.nextSibling;
 
-  if (evnt.target.id === 'all') {
-    if (checkbox.checked) {
-      allOff(evnt.target.id);
-    } else {
-      allOn(evnt.target.id);
+    if (evnt.target.id === 'all') {
+      if (checkbox.checked) {
+        allOff(evnt.target.id);
+      } else {
+        allOn(evnt.target.id);
+      }
+    } else if (lockbox.checked) {
+      checkbox.disabled = true;
+    } else if (checkbox.checked) {
+      oneOff(evnt.target.id);
+    } else if (!checkbox.checked) {
+      oneOn(evnt.target.id);
     }
-  } else if (!lockbox.checked && checkbox.checked) {
-    oneOff(evnt.target.id);
-  } else if (lockbox.checked && checkbox.checked) {
-    checkbox.disabled = true;
-  } else if (!lockbox.checked && !checkbox.checked) {
-    oneOn(evnt.target.id);
-  } else if (lockbox.checked && !checkbox.checked) {
-    checkbox.disabled = true;
   }
 }
 

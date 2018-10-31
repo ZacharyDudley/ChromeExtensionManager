@@ -53,17 +53,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       break;
 
     case 'allOn':
-      chrome.management.getAll(function(allExtensions) {
-        allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
-            chrome.management.setEnabled(extension.id, true);
-            extensionList.push(extension.id);
-          }
+        chrome.management.getAll(function(allExtensions) {
+          allExtensions.forEach(extension => {
+            if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
+              chrome.management.setEnabled(extension.id, true);
+              extensionList.push(extension.id);
+            }
+          });
+          allOption.enabled = true;
+          extensionList.push('all');
+          sendResponse({all: extensionList});
         });
-        allOption.enabled = true;
-        extensionList.push(allOption);
-        sendResponse({all: extensionList});
-      });
       break;
 
     case 'allOff':
@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           }
         });
         allOption.enabled = false;
-        extensionList.push(allOption);
+        extensionList.push('all');
         sendResponse({all: extensionList});
       });
       break;

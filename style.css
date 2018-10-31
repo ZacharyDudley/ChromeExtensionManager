@@ -16,10 +16,15 @@ tr, td {
   justify-content: flex-start;
   align-items: center;
   font-size: 13px;
+  width: 100%;
+}
+
+td p {
+  margin: 0 15px 0 0;
 }
 
 .lockbox {
-
+  margin-left: auto;
 }
 
 .this {
@@ -90,6 +95,6 @@ input:checked + .slider:before {
 }
 
 .inactiveRow {
-  /* background-color: dimgrey; */
+  background-color: rgb(170, 170, 170);
   font-style: italic;
 }
