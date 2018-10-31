@@ -8,7 +8,7 @@ function getAllExtensions() {
     }
 
     for (let i = 0; i < allExtensions.all.length; i++) {
-        createExtensionRow(allExtensions.all[i]);
+      createExtensionRow(allExtensions.all[i]);
     }
 
     createExtensionRow(allExtensions.thisExtension, true);
@@ -23,7 +23,6 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
 
   let checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
-  // checkbox.checked = extensionInfo.enabled;
 
   let button = document.createElement('span');
   button.classList.add('slider');
@@ -33,7 +32,16 @@ function createExtensionRow(extensionInfo, isThisExtension = false) {
   extensionCell.appendChild(buttonBackground);
 
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
-  extensionCell.appendChild(extensionTitle);
+  let title = document.createElement('p');
+  title.appendChild(extensionTitle);
+  extensionCell.appendChild(title);
+
+  // LOCK BOX
+  let lockBox = document.createElement('input');
+  lockBox.type = 'checkbox';
+  lockBox.id = `lock-${extensionInfo.id}`;
+  lockBox.classList.add('lockbox');
+  extensionCell.appendChild(lockBox);
 
   button.id = `${extensionInfo.id}`;
 
@@ -69,7 +77,6 @@ function styleExtension(id, active) {
 }
 
 function allOn() {
-  // styleExtension('all', true);
   chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], true);
@@ -78,7 +85,6 @@ function allOn() {
 }
 
 function allOff() {
-  // styleExtension('all', false);
   chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
     for (let i = 0; i < allExtensions.all.length; i++) {
       styleExtension(allExtensions.all[i], false);
@@ -103,18 +109,23 @@ function logMessage(message) {
 }
 
 function eventHandler(evnt) {
-  let checkbox = document.getElementById(evnt.target.id).previousSibling;
+  if (evnt.target.id) {
+    let checkbox = document.getElementById(evnt.target.id).previousSibling;
+    let lockbox = document.getElementById(evnt.target.id).parentElement.nextSibling.nextSibling;
 
-  if (evnt.target.id === 'all') {
-    if (checkbox.checked) {
-      allOff(evnt.target.id);
-    } else {
-      allOn(evnt.target.id);
+    if (evnt.target.id === 'all') {
+      if (checkbox.checked) {
+        allOff(evnt.target.id);
+      } else {
+        allOn(evnt.target.id);
+      }
+    } else if (lockbox.checked) {
+      checkbox.disabled = true;
+    } else if (checkbox.checked) {
+      oneOff(evnt.target.id);
+    } else if (!checkbox.checked) {
+      oneOn(evnt.target.id);
     }
-  } else if (checkbox.checked) {
-    oneOff(evnt.target.id);
-  } else {
-    oneOn(evnt.target.id);
   }
 }
 
