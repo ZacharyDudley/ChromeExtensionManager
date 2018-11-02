@@ -1,18 +1,35 @@
 let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 let extensionTable = document.getElementById('extensionTable');
 
-function getAllExtensions() {
-  chrome.runtime.sendMessage({type: 'allGet'}, function(allExtensions) {
-    if (allExtensions.all.length > 1) {
-      createExtensionRow(allExtensions.allOption);
+function retreiveExtenstions() {
+  chrome.storage.local.get(['extensionList'], function(extensionList) {
+    if (Object.keys(extensionList).length > 0) {
+      createExtensionGrid(extensionList);
+    } else {
+      getExtensionsFromBackground();
     }
-
-    for (let i = 0; i < allExtensions.all.length; i++) {
-      createExtensionRow(allExtensions.all[i]);
-    }
-
-    createExtensionRow(allExtensions.thisExtension, true);
   });
+}
+
+function getExtensionsFromBackground() {
+  chrome.runtime.sendMessage({type: 'getAll'}, function(allExtensions) {
+    storeExtensions(allExtensions);
+    createExtensionGrid(allExtensions);
+  });
+}
+
+function storeExtensions(extensions) {
+  chrome.storage.local.set({extensionList: extensions});
+}
+
+function createExtensionGrid(extensions) {
+  if (extensions.extensionList.all.length > 1) {
+    createExtensionRow(extensions.extensionList.allOption);
+  }
+  for (let i = 0; i < extensions.extensionList.all.length; i++) {
+    createExtensionRow(extensions.extensionList.all[i]);
+  }
+  createExtensionRow(extensions.extensionList.thisExtension, true);
 }
 
 function createExtensionRow(extensionInfo, isThisExtension = false) {
@@ -131,4 +148,4 @@ function eventHandler(evnt) {
 
 window.addEventListener('mouseup', eventHandler);
 
-getAllExtensions();
+retreiveExtenstions();

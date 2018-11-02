@@ -15,6 +15,7 @@
     "persistent": false
   },
   "permissions": [
-    "management"
+    "management",
+    "storage"
   ]
 }

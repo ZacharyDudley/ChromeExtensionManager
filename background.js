@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 
   switch (request.type) {
-    case 'allGet':
+    case 'getAll':
       chrome.management.getAll(function(allExtensions) {
         allExtensions.forEach(extension => {
           if (extension.type === 'extension' && extension.id !== thisExtensionId) {
