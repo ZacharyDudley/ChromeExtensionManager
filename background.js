@@ -1,5 +1,6 @@
 let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
-let extensionList = [];
+let extensionList = {};
+let locked = {};
 let allExtensionsOn = true;
 let allExtensionsOff = true;
 let allOption = {
@@ -14,81 +15,99 @@ let thisExtension = {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  extensionList = [];
-  allExtensionsOn = true;
-  allExtensionsOff = true;
-
+  let data;
 
   switch (request.type) {
     case 'getAll':
-      chrome.management.getAll(function(allExtensions) {
-        allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && extension.id !== thisExtensionId) {
-            extensionList.push(extension);
-            if (extension.enabled) {
-              allExtensionsOff = false;
-            } else {
-              allExtensionsOn = false;
-            }
-          }
-        });
-        extensionList.sort(function (a, b) {
-          let nameA = a.shortName.toLowerCase();
-          let nameB = b.shortName.toLowerCase();
-          if (nameA < nameB) {
-            return -1;
-          } else if (nameA > nameB) {
-            return 1;
-          } else {
-            return 0;
-          }
-        });
-        if (allExtensionsOff) {
-          allOption.enabled = false;
-        } else if (allExtensionsOn) {
-          allOption.enabled = true;
-        }
-        sendResponse({all: extensionList, allOption, thisExtension});
-      });
-      break;
+      chrome.storage.local.get(['extensions', 'locked', 'allOption', 'thisOption'], function(extensionStorage) {
+        if (extensionStorage.extensions) {
+          sendResponse(extensionStorage);
+        } else {
+          chrome.management.getAll(function(extensions) {
+            extensions.forEach(extension => {
+              if (extension.type === 'extension' && extension.id !== thisExtensionId) {
+                extensionList[`${extension.id}`] = extension;
+                locked[`${extension.id}`] = false;
 
-    case 'allOn':
-        chrome.management.getAll(function(allExtensions) {
-          allExtensions.forEach(extension => {
-            if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
-              chrome.management.setEnabled(extension.id, true);
-              extensionList.push(extension.id);
+                if (extension.enabled) {
+                  allExtensionsOff = false;
+                } else {
+                  allExtensionsOn = false;
+                }
+              }
+            });
+
+            if (allExtensionsOff) {
+              allOption.enabled = false;
+            } else if (allExtensionsOn) {
+              allOption.enabled = true;
             }
+
+            chrome.storage.local.set({
+              extensions: extensionList,
+              locked: locked,
+              allOption: allOption,
+              thisOption: thisExtension
+            });
+
+            sendResponse({
+              extensions: extensionList,
+              locked: locked,
+              allOption: allOption,
+              thisOption: thisExtension
+            });
           });
-          allOption.enabled = true;
-          extensionList.push('all');
-          sendResponse({all: extensionList});
-        });
+        }
+      });
+      //   extensionList.sort(function (a, b) {
+      //     let nameA = a.shortName.toLowerCase();
+      //     let nameB = b.shortName.toLowerCase();
+      //     if (nameA < nameB) {
+      //       return -1;
+      //     } else if (nameA > nameB) {
+      //       return 1;
+      //     } else {
+      //       return 0;
+      //     }
+      //   });
       break;
 
-    case 'allOff':
-      chrome.management.getAll(function(allExtensions) {
-        allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && extension.enabled && extension.id !== thisExtensionId) {
-            chrome.management.setEnabled(extension.id, false);
-            extensionList.push(extension.id);
+    case 'all':
+      chrome.storage.local.get(['extensions', 'locked', 'allOption'], function(data) {
+        for (extension in data.extensions) {
+          if (!data.locked[extension]) {
+            chrome.management.setEnabled(extension, request.disable);
+            data.extensions[extension].enabled = request.disable;
           }
-        });
-        allOption.enabled = false;
-        extensionList.push('all');
-        sendResponse({all: extensionList});
+        }
+        data.allOption.enabled = request.disable;
+        chrome.storage.local.set({extensions: data.extensions, allOption: data.allOption});
+        sendResponse({extensions: data.extensions, locked: data.locked, allOption: data.allOption});
       });
       break;
 
-    case 'oneOn':
-      chrome.management.setEnabled(request.id, true);
-      sendResponse({id: request.id});
+    case 'one':
+      chrome.storage.local.get(['extensions'], function(data) {
+        chrome.management.setEnabled(request.id, request.disable);
+        data.extensions[request.id].enabled = request.disable;
+        chrome.storage.local.set({extensions: data.extensions});
+        sendResponse({id: request.id, active: data.extensions[request.id].enabled});
+      });
       break;
 
-    case 'oneOff':
-      chrome.management.setEnabled(request.id, false);
-      sendResponse({id: request.id});
+    case 'lock':
+      chrome.storage.local.get(['locked'], function(data) {
+        data.locked[request.id] = request.status;
+        chrome.storage.local.set({locked: data.locked});
+        sendResponse({id: request.id, isLocked: data.locked[request.id]});
+      });
       break;
+
+    case 'clear':
+      chrome.storage.local.clear();
+      chrome.storage.local.get(['extensions', 'locked', 'allOption', 'thisOption'], function(extensionStorage) {
+        data = extensionStorage;
+      });
 
     default:
       console.log('DEFAULT: ', request);
