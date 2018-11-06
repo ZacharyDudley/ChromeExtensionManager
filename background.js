@@ -72,53 +72,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       //   });
       break;
 
-    case 'allOn':
-      chrome.storage.local.get(['extensions', 'locked', 'allOption', 'thisOption'], function(extensionData) {
-        console.log(extensionData)
-      })
-
-        // chrome.management.getAll(function(allExtensions) {
-        //   allExtensions.forEach(extension => {
-        //     if (extension.type === 'extension' && !extension.enabled && extension.id !== thisExtensionId) {
-        //       chrome.management.setEnabled(extension.id, true);
-        //       extensionList.push(extension.id);
-        //     }
-        //   });
-        //   allOption.enabled = true;
-        //   extensionList.push('all');
-        //   sendResponse({all: extensionList});
-        // });
-      break;
-
-    case 'allOff':
-      chrome.management.getAll(function(allExtensions) {
-        allExtensions.forEach(extension => {
-          if (extension.type === 'extension' && extension.enabled && extension.id !== thisExtensionId) {
-            chrome.management.setEnabled(extension.id, false);
-            extensionList.push(extension.id);
+    case 'all':
+      chrome.storage.local.get(['extensions', 'locked', 'allOption'], function(data) {
+        for (extension in data.extensions) {
+          if (!data.locked[extension]) {
+            chrome.management.setEnabled(extension, request.disable);
+            data.extensions[extension].enabled = request.disable;
           }
-        });
-        allOption.enabled = false;
-        extensionList.push('all');
-        sendResponse({all: extensionList});
-      });
-      break;
-
-    case 'oneOn':
-      chrome.storage.local.get(['extensions'], function(data) {
-        chrome.management.setEnabled(request.id, true);
-        data.extensions[request.id].enabled = true;
-        chrome.storage.local.set({extensions: data.extensions});
-        sendResponse({id: request.id});
-      });
-      break;
-
-    case 'oneOff':
-      chrome.storage.local.get(['extensions'], function(data) {
-        chrome.management.setEnabled(request.id, false);
-        data.extensions[request.id].enabled = false;
-        chrome.storage.local.set({extensions: data.extensions});
-        sendResponse({id: request.id});
+        }
+        data.allOption.enabled = request.disable;
+        chrome.storage.local.set({extensions: data.extensions, allOption: data.allOption});
+        sendResponse({extensions: data.extensions, locked: data.locked, allOption: data.allOption});
       });
       break;
 
@@ -127,7 +91,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.management.setEnabled(request.id, request.disable);
         data.extensions[request.id].enabled = request.disable;
         chrome.storage.local.set({extensions: data.extensions});
-        sendResponse({id: request.id});
+        sendResponse({id: request.id, active: data.extensions[request.id].enabled});
       });
       break;
 
@@ -135,7 +99,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       chrome.storage.local.get(['locked'], function(data) {
         data.locked[request.id] = request.status;
         chrome.storage.local.set({locked: data.locked});
-        sendResponse({id: request.id});
+        sendResponse({id: request.id, isLocked: data.locked[request.id]});
       });
       break;
 

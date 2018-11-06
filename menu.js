@@ -67,15 +67,15 @@ function createRow(extensionInfo, lockStatus, isThisExtension = false, isAllTogg
     extensionRow.classList.add('this');
   }
 
-  styleExtension(extensionInfo.id, extensionInfo.enabled);
+  styleExtension(extensionInfo.id, extensionInfo.enabled, lockStatus);
 }
 
-function styleExtension(id, active) {
+function styleExtension(id, isActive, lockStatus) {
   let button = document.getElementById(id);
   let row = button.parentElement.parentElement.parentElement;
   let checkbox = button.previousSibling;
 
-  if (active) {
+  if (isActive) {
     if (button.classList.contains('inactive')) {
       button.classList.remove('inactive');
       row.classList.remove('inactiveRow');
@@ -91,83 +91,44 @@ function styleExtension(id, active) {
     row.classList.add('inactiveRow');
   }
 
-  checkbox.checked = active;
+  checkbox.checked = isActive;
+
+  if (id !== thisExtensionId && id !== 'all') {
+    styleLock(id, lockStatus);
+  }
 }
 
-function allOn() {
-  // chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
-  //   for (let i = 0; i < allExtensions.all.length; i++) {
-  //     styleExtension(allExtensions.all[i], true);
-  //   }
-  // });
+function styleLock(id, isLocked) {
+  let row = document.querySelector(`tr[data-id=${id}]`);
+  let toggle = document.querySelector(`[data-toggle=${id}]`);
 
-  chrome.storage.local.get(['extensions', 'locked'], function(extensionStorage) {
-    console.log(extensionStorage)
-  });
-}
-
-function allOff() {
-  // chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
-  //   for (let i = 0; i < allExtensions.all.length; i++) {
-  //     styleExtension(allExtensions.all[i], false);
-  //   }
-  // });
-
-  // chrome.storage.local.get(['extensions'], function(extensionStorage) {
-  //   if (extensionStorage.extensions) {
-  //     createExtensionGrid(extensionStorage.extensions);
-  //   } else {
-  //     getExtensionsFromBackground();
-  //   }
-  // });
-}
-
-function oneOn(extensionId) {
-  chrome.runtime.sendMessage({type: 'oneOn', id: extensionId}, function(extension) {
-    styleExtension(extension.id, true);
-  });
-}
-
-function oneOff(extensionId) {
-  chrome.runtime.sendMessage({type: 'oneOff', id: extensionId}, function(extension) {
-    styleExtension(extension.id, false);
-  });
-}
-
-function logMessage(message) {
-  chrome.runtime.sendMessage({type: 'message', message});
+  if (isLocked) {
+    toggle.disabled = true;
+    row.dataset.lock = 'true';
+  } else {
+    toggle.disabled = false;
+    row.dataset.lock = 'false';
+  }
 }
 
 function clickToggleAll(event) {
-    allOn();
-  // toggleAll(event.target.dataset.toggle, event.target.checked);
+  chrome.runtime.sendMessage({type: 'all', disable: event.target.checked}, function(data) {
+    for (extension in data.extensions) {
+      styleExtension(extension, data.extensions[extension].enabled, data.locked[extension]);
+    }
+    styleExtension('all', data.allOption.enabled);
+  });
 }
 
 function clickToggle(event) {
-  if (event.target.checked) {
-    oneOn(event.target.dataset.toggle);
-  } else {
-    oneOff(event.target.dataset.toggle);
-  }
-  // chrome.runtime.sendMessage({type: 'one', id: event.target.dataset.toggle, disable: event.target.checked}, function(extension) {
-  //   styleExtension(extension.id, true);
-  // });
+  chrome.runtime.sendMessage({type: 'one', id: event.target.dataset.toggle, disable: event.target.checked}, function(data) {
+    styleExtension(data.id, data.active, false);
+  });
 }
 
 function clickLockbox(event) {
-  chrome.runtime.sendMessage({type: 'lock', id: event.target.dataset.lock, status: event.target.checked}, function() {
-    let row = document.querySelector(`tr[data-id=${event.target.dataset.lock}]`);
-    let toggle = document.querySelector(`[data-toggle=${event.target.dataset.lock}]`);
-
-    // send to STYLE
-
-    if (event.target.checked) {
-      toggle.disabled = true;
-      row.dataset.lock = 'true';
-    } else {
-      toggle.disabled = false;
-      row.dataset.lock = 'false';
-    }
+  chrome.runtime.sendMessage({type: 'lock', id: event.target.dataset.lock, status: event.target.checked}, function(data) {
+    styleLock(data.id, data.isLocked);
   });
 }
 
