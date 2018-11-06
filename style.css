@@ -19,6 +19,10 @@ tr, td {
   width: 100%;
 }
 
+tr[data-lock=true] {
+  background-color: rgb(77, 77, 77);
+}
+
 td p {
   margin: 0 15px 0 0;
 }
@@ -89,12 +93,16 @@ input:checked + .slider:before {
   transform: translateX(22px);
 }
 
+tr[data-lock=true] .slider {
+  cursor: not-allowed;
+}
+
 .activeRow {
   /* background-color: teal; */
   font-style: normal;
 }
 
 .inactiveRow {
-  background-color: rgb(170, 170, 170);
+  /* background-color: rgb(170, 170, 170); */
   font-style: italic;
 }

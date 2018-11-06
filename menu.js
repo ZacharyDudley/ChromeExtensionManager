@@ -2,65 +2,66 @@ let thisExtensionId = 'indacognibelkfidjhkjchhmbicnmeif';
 let extensionTable = document.getElementById('extensionTable');
 
 function retreiveExtenstions() {
-  chrome.storage.local.get(['extensionList'], function(extensionList) {
-    if (Object.keys(extensionList).length > 0) {
-      createExtensionGrid(extensionList);
-    } else {
-      getExtensionsFromBackground();
-    }
+  chrome.runtime.sendMessage({type: 'getAll'}, function(extensions) {
+    createGrid(extensions);
   });
 }
 
-function getExtensionsFromBackground() {
-  chrome.runtime.sendMessage({type: 'getAll'}, function(allExtensions) {
-    storeExtensions(allExtensions);
-    createExtensionGrid(allExtensions);
-  });
-}
-
-function storeExtensions(extensions) {
-  chrome.storage.local.set({extensionList: extensions});
-}
-
-function createExtensionGrid(extensions) {
-  if (extensions.extensionList.all.length > 1) {
-    createExtensionRow(extensions.extensionList.allOption);
+function createGrid(extensions) {
+  if (Object.keys(extensions.extensions).length > 1) {
+    createRow(extensions.allOption, false, false, true);
   }
-  for (let i = 0; i < extensions.extensionList.all.length; i++) {
-    createExtensionRow(extensions.extensionList.all[i]);
+  for (extension in extensions.extensions) {
+    createRow(extensions.extensions[extension], extensions.locked[extension]);
   }
-  createExtensionRow(extensions.extensionList.thisExtension, true);
+  createRow(extensions.thisOption, false, true);
 }
 
-function createExtensionRow(extensionInfo, isThisExtension = false) {
+function createRow(extensionInfo, lockStatus, isThisExtension = false, isAllToggle = false) {
+  // ROW
   let extensionRow = extensionTable.insertRow();
   let extensionCell = extensionRow.insertCell();
-  let buttonBackground = document.createElement('label');
-  buttonBackground.classList.add('switch');
 
+  extensionRow.dataset.id = extensionInfo.id;
+
+  // TOGGLE
   let checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-
   let button = document.createElement('span');
-  button.classList.add('slider');
+  let buttonBackground = document.createElement('label');
 
+  checkbox.type = 'checkbox';
+  checkbox.setAttribute('data-toggle', extensionInfo.id);
+  button.id = `${extensionInfo.id}`;
+  button.classList.add('slider');
+  buttonBackground.classList.add('switch');
   buttonBackground.appendChild(checkbox);
   buttonBackground.appendChild(button);
   extensionCell.appendChild(buttonBackground);
 
+  if (extensionInfo.id !== 'all') {
+    checkbox.onchange = clickToggle;
+  } else {
+    checkbox.onchange = clickToggleAll;
+  }
+
+  // TITLE
   let extensionTitle = document.createTextNode(extensionInfo.shortName);
   let title = document.createElement('p');
+
   title.appendChild(extensionTitle);
   extensionCell.appendChild(title);
 
-  // LOCK BOX
-  let lockBox = document.createElement('input');
-  lockBox.type = 'checkbox';
-  lockBox.id = `lock-${extensionInfo.id}`;
-  lockBox.classList.add('lockbox');
-  extensionCell.appendChild(lockBox);
+  if (!isThisExtension && !isAllToggle) {
+    // LOCKBOX
+    let lockbox = document.createElement('input');
 
-  button.id = `${extensionInfo.id}`;
+    lockbox.type = 'checkbox';
+    lockbox.onchange = clickLockbox;
+    lockbox.setAttribute('data-lock', extensionInfo.id);
+    lockbox.classList.add('lockbox');
+    lockbox.checked = lockStatus;
+    extensionCell.appendChild(lockbox);
+  }
 
   if (isThisExtension) {
     extensionRow.classList.add('this');
@@ -94,19 +95,31 @@ function styleExtension(id, active) {
 }
 
 function allOn() {
-  chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
-    for (let i = 0; i < allExtensions.all.length; i++) {
-      styleExtension(allExtensions.all[i], true);
-    }
+  // chrome.runtime.sendMessage({type: 'allOn'}, function(allExtensions) {
+  //   for (let i = 0; i < allExtensions.all.length; i++) {
+  //     styleExtension(allExtensions.all[i], true);
+  //   }
+  // });
+
+  chrome.storage.local.get(['extensions', 'locked'], function(extensionStorage) {
+    console.log(extensionStorage)
   });
 }
 
 function allOff() {
-  chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
-    for (let i = 0; i < allExtensions.all.length; i++) {
-      styleExtension(allExtensions.all[i], false);
-    }
-  });
+  // chrome.runtime.sendMessage({type: 'allOff'}, function(allExtensions) {
+  //   for (let i = 0; i < allExtensions.all.length; i++) {
+  //     styleExtension(allExtensions.all[i], false);
+  //   }
+  // });
+
+  // chrome.storage.local.get(['extensions'], function(extensionStorage) {
+  //   if (extensionStorage.extensions) {
+  //     createExtensionGrid(extensionStorage.extensions);
+  //   } else {
+  //     getExtensionsFromBackground();
+  //   }
+  // });
 }
 
 function oneOn(extensionId) {
@@ -125,27 +138,45 @@ function logMessage(message) {
   chrome.runtime.sendMessage({type: 'message', message});
 }
 
-function eventHandler(evnt) {
-  if (evnt.target.id) {
-    let checkbox = document.getElementById(evnt.target.id).previousSibling;
-    let lockbox = document.getElementById(evnt.target.id).parentElement.nextSibling.nextSibling;
-
-    if (evnt.target.id === 'all') {
-      if (checkbox.checked) {
-        allOff(evnt.target.id);
-      } else {
-        allOn(evnt.target.id);
-      }
-    } else if (lockbox.checked) {
-      checkbox.disabled = true;
-    } else if (checkbox.checked) {
-      oneOff(evnt.target.id);
-    } else if (!checkbox.checked) {
-      oneOn(evnt.target.id);
-    }
-  }
+function clickToggleAll(event) {
+    allOn();
+  // toggleAll(event.target.dataset.toggle, event.target.checked);
 }
 
-window.addEventListener('mouseup', eventHandler);
+function clickToggle(event) {
+  if (event.target.checked) {
+    oneOn(event.target.dataset.toggle);
+  } else {
+    oneOff(event.target.dataset.toggle);
+  }
+  // chrome.runtime.sendMessage({type: 'one', id: event.target.dataset.toggle, disable: event.target.checked}, function(extension) {
+  //   styleExtension(extension.id, true);
+  // });
+}
 
+function clickLockbox(event) {
+  chrome.runtime.sendMessage({type: 'lock', id: event.target.dataset.lock, status: event.target.checked}, function() {
+    let row = document.querySelector(`tr[data-id=${event.target.dataset.lock}]`);
+    let toggle = document.querySelector(`[data-toggle=${event.target.dataset.lock}]`);
+
+    // send to STYLE
+
+    if (event.target.checked) {
+      toggle.disabled = true;
+      row.dataset.lock = 'true';
+    } else {
+      toggle.disabled = false;
+      row.dataset.lock = 'false';
+    }
+  });
+}
+
+function clearAllData() {
+  chrome.storage.local.clear();
+  chrome.runtime.sendMessage({type: 'clear'}, function(data) {
+    console.log(data)
+  });
+}
+
+// clearAllData();
 retreiveExtenstions();
